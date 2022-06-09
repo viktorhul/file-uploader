@@ -5,4 +5,4 @@ File Uploader is a web based interface from which a user can upload files. These
 2. Run `docker-compose up -d`
 
 ## Other stuff
-* Make sure docker and docker-compose is up to date
+* Make sure docker and docker-compose are up to date
