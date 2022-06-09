@@ -3,29 +3,19 @@ const app = express()
 const formidable = require('formidable')
 const path = require('path')
 const fs = require('fs')
-const { create } = require('domain')
-const { dir } = require('console')
 
-function createDirectoryName() {
-    let directoryName = Date.now()
-
-    fs.access(
-        __dirname + '/uploads/' + directoryName,
-        fs.constants.F_OK,
-        (err) => {
-            if (err) {
-                return directoryName
-            }
-            else {
-                directoryName = createDirectoryName()
-            }
+fs.access(__dirname + '/tmp', fs.constants.F_OK, (err) => {
+    if (err) {
+        fs.mkdir(__dirname + '/tmp', (err) => {
+            if (err) { console.log(err) }
         })
-}
+    }
+})
 
 app.post('/upload', (req, res) => {
     const upload = formidable({
         multiples: true,
-        //uploadDir: __dirname + '/uploads'
+        uploadDir: __dirname + '/tmp'
     })
 
     upload.parse(req, (err, fields, files) => {
@@ -34,8 +24,9 @@ app.post('/upload', (req, res) => {
             return res.send('Something went wrong')
         }
 
-        let directoryName = new Date()
+        let directoryName = Date.now()
 
+        /*
         fs.access(
             __dirname + '/uploads/' + directoryName,
             fs.constants.F_OK,
@@ -45,7 +36,7 @@ app.post('/upload', (req, res) => {
                 } else {
                     return res.send('något gick fel. uppdatera sidan')
                 }
-            })
+            })*/
 
         fs.mkdir(__dirname + '/uploads/' + directoryName, (err) => {
             if (err) {
@@ -56,12 +47,12 @@ app.post('/upload', (req, res) => {
 
         if (Array.isArray(files.file)) {
             files.file.forEach(f => {
-                fs.rename(f.filepath, __dirname + '/uploads/' + directoryName + '/' + f.originalFilename, (err) => {
+                fs.copyFile(f.filepath, __dirname + '/uploads/' + directoryName + '/' + f.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
                     if (err) console.log(err)
                 })
             })
         } else {
-            fs.rename(f.filepath, __dirname + '/uploads/' + directoryName + '/' + f.originalFilename, (err) => {
+            fs.copyFile(files.file.filepath, __dirname + '/uploads/' + directoryName + '/' + files.file.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
                 if (err) console.log(err)
             })
         }
@@ -71,7 +62,7 @@ app.post('/upload', (req, res) => {
 })
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '/public/index.html'))
+    return res.sendFile(path.join(__dirname, '/public/index.html'))
 })
 
 app.listen(process.env.PORT || 3000, () => {
