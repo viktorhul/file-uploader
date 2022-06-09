@@ -4,6 +4,14 @@ const formidable = require('formidable')
 const path = require('path')
 const fs = require('fs')
 
+const server = app.listen(process.env.PORT || 3000, () => {
+    console.log('Running')
+})
+
+const http = require('http')
+const { Server } = require('socket.io')
+const io = new Server(server)
+
 fs.access(__dirname + '/tmp', fs.constants.F_OK, (err) => {
     if (err) {
         fs.mkdir(__dirname + '/tmp', (err) => {
@@ -12,11 +20,19 @@ fs.access(__dirname + '/tmp', fs.constants.F_OK, (err) => {
     }
 })
 
+app.get('/', (req, res) => {
+    return res.sendFile(__dirname + '/index.html')
+})
+
 app.post('/upload', (req, res) => {
     const upload = formidable({
         multiples: true,
         uploadDir: __dirname + '/tmp',
         maxFileSize: 1024 * 1024 * 1024 * 20
+    })
+
+    upload.on('progress', (bytesReceived, bytesExpected) => {
+        io.emit('progress', { progress: bytesReceived / bytesExpected })
     })
 
     upload.parse(req, (err, fields, files) => {
@@ -46,26 +62,22 @@ app.post('/upload', (req, res) => {
             }
         })
 
-        if (Array.isArray(files.file)) {
-            files.file.forEach(f => {
-                fs.copyFile(f.filepath, __dirname + '/uploads/' + directoryName + '/' + f.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
-                    if (err) console.log(err)
-                })
-            })
-        } else {
-            fs.copyFile(files.file.filepath, __dirname + '/uploads/' + directoryName + '/' + files.file.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
+        const fileNames = Object.keys(files)
+        //if (Array.isArray(files.file)) {
+        fileNames.forEach(a => {
+            f = files[a]
+            fs.copyFile(f.filepath, __dirname + '/uploads/' + directoryName + '/' + f.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
                 if (err) console.log(err)
             })
-        }
+        })
+        /*} else {
+
+            //console.log(__dirname + '/uploads/' + directoryName + '/' + files.originalFilename)
+            fs.copyFile(files.filepath, __dirname + '/uploads/' + directoryName + '/' + files.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
+                if (err) console.log(err)
+            })
+        }*/
 
         return res.sendFile(path.join(__dirname, '/public/complete.html'))
     })
-})
-
-app.get('*', (req, res) => {
-    return res.sendFile(path.join(__dirname, '/public/index.html'))
-})
-
-app.listen(process.env.PORT || 3000, () => {
-    console.log('Running')
 })
