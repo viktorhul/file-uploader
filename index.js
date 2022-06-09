@@ -57,7 +57,7 @@ app.post('/upload', (req, res) => {
             })
         }
 
-        return res.send("complete!")
+        return res.sendFile(path.join(__dirname, '/public/complete.html'))
     })
 })
 

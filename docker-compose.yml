@@ -3,8 +3,8 @@ services:
     build:
       context: .
     restart: unless-stopped
-    container_name: file_uploader
+    container_name: file_uploader # Give it a name
     ports:
-      - 8020:3000
+      - 8020:3000 # Choose a port
     volumes:
-      - ./uploads:/app/uploads
+      - ./uploads:/app/uploads # Choose a path for uploaded files
