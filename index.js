@@ -15,7 +15,8 @@ fs.access(__dirname + '/tmp', fs.constants.F_OK, (err) => {
 app.post('/upload', (req, res) => {
     const upload = formidable({
         multiples: true,
-        uploadDir: __dirname + '/tmp'
+        uploadDir: __dirname + '/tmp',
+        maxFileSize: 1024 * 1024 * 1024 * 20
     })
 
     upload.parse(req, (err, fields, files) => {
