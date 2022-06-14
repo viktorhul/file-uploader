@@ -16,13 +16,13 @@ const io = new Server(server)
 
 function init() {
     fs.mkdir(__dirname + '/tmp', (err) => {
-        if (err?.code != 'EEXIST') {
+        if (err && err.code != 'EEXIST') {
             console.error('ERROR: mkdir /tmp', err)
         }
     })
 
     fs.mkdir(__dirname + '/uploads', (err) => {
-        if (err?.code != 'EEXIST') {
+        if (err && err.code != 'EEXIST') {
             console.error('ERROR: mkdir /uploads', err)
         }
     })

@@ -116,6 +116,7 @@
                 }
             })
             .catch((err) => {
+                uploadProgress.style.display = 'none'
                 printError('Något gick snett... (' + err + ')')
             })
         }
