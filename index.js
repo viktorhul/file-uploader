@@ -14,21 +14,21 @@ const http = require('http')
 const { Server } = require('socket.io')
 const io = new Server(server)
 
-fs.access(__dirname + '/tmp', fs.constants.F_OK, (err) => {
-    if (err) {
-        fs.mkdir(__dirname + '/tmp', (err) => {
-            if (err) { console.log("Init error: " + err) }
-        })
-    }
-})
+function init() {
+    fs.mkdir(__dirname + '/tmp', (err) => {
+        if (err.code != 'EEXIST') {
+            console.error('ERROR: mkdir /tmp', err)
+        }
+    })
 
-fs.access(__dirname + '/uploads', fs.constants.F_OK, (err) => {
-    if (err) {
-        fs.mkdir(__dirname + '/uploads', (err) => {
-            if (err) { console.log("Init error: " + err) }
-        })
-    }
-})
+    fs.mkdir(__dirname + '/uploads', (err) => {
+        if (err.code != 'EEXIST') {
+            console.error('ERROR: mkdir /uploads', err)
+        }
+    })
+}
+
+init()
 
 app.get('/', (req, res) => {
     return res.sendFile(__dirname + '/index.html')
@@ -38,7 +38,7 @@ app.post('/upload', (req, res) => {
     const upload = formidable({
         multiples: true,
         uploadDir: __dirname + '/tmp',
-        maxFileSize: 1024 * 1024 * 1024 * 20
+        maxFileSize: 1024 * 1024 * 1024 * 40 // max 40 GB
     })
 
     upload.on('progress', (bytesReceived, bytesExpected) => {
@@ -47,47 +47,31 @@ app.post('/upload', (req, res) => {
 
     upload.parse(req, (err, fields, files) => {
         if (err) {
-            console.log(err)
-            return res.send('Something went wrong')
+            console.error("ERROR: parse upload", err)
+            return res.sendStatus(500)
         }
 
         let directoryName = Date.now()
 
-        /*
-        fs.access(
-            __dirname + '/uploads/' + directoryName,
-            fs.constants.F_OK,
-            (err) => {
-                if (err) {
-                    return directoryName
-                } else {
-                    return res.send('något gick fel. uppdatera sidan')
-                }
-            })*/
-
         fs.mkdir(__dirname + '/uploads/' + directoryName, (err) => {
             if (err) {
-                console.log(err)
-                return res.send('något är väldigt fel')
+                console.error("ERROR: mkdir /uploads/" + directoryName, err)
+                return res.sendStatus(500)
             }
         })
 
         const fileNames = Object.keys(files)
-        //if (Array.isArray(files.file)) {
+
         fileNames.forEach(a => {
             f = files[a]
             fs.copyFile(f.filepath, __dirname + '/uploads/' + directoryName + '/' + f.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
-                if (err) console.log(err)
+                if (err) {
+                    console.error("ERROR: move from /tmp to /uploads/" + directoryName, err)
+                    return res.sendStatus(500)
+                }
             })
         })
-        /*} else {
 
-            //console.log(__dirname + '/uploads/' + directoryName + '/' + files.originalFilename)
-            fs.copyFile(files.filepath, __dirname + '/uploads/' + directoryName + '/' + files.originalFilename, fs.constants.COPYFILE_EXCL, (err) => {
-                if (err) console.log(err)
-            })
-        }*/
-
-        return res.sendFile(path.join(__dirname, '/public/complete.html'))
+        return res.json({ ok: true })
     })
 })
