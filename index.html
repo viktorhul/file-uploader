@@ -64,7 +64,6 @@
                 uploadProgressBar.style.display = 'none'
             } else {
                 uploadProgressBar.style.width = (msg.progress * 100) + '%'
-                //uploadProgressBar.innerText = Math.round(msg.progress * 100) + ' %'
             }
         })
 
@@ -109,7 +108,7 @@
             })
             .then(data => {
                 uploadProgress.style.display = 'none'
-                
+
                 if (data.ok) {
                     printSuccess('Filerna är uppladdade! <a href="/">Ladda upp fler</a>')
                 } else {
