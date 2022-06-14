@@ -4,8 +4,10 @@ const formidable = require('formidable')
 const path = require('path')
 const fs = require('fs')
 
-const server = app.listen(process.env.PORT || 3000, () => {
-    console.log('Running')
+const PORT = process.env.PORT || 3000
+
+const server = app.listen(PORT, () => {
+    console.log('Listening on port ' + PORT)
 })
 
 const http = require('http')
@@ -15,7 +17,15 @@ const io = new Server(server)
 fs.access(__dirname + '/tmp', fs.constants.F_OK, (err) => {
     if (err) {
         fs.mkdir(__dirname + '/tmp', (err) => {
-            if (err) { console.log(err) }
+            if (err) { console.log("Init error: " + err) }
+        })
+    }
+})
+
+fs.access(__dirname + '/uploads', fs.constants.F_OK, (err) => {
+    if (err) {
+        fs.mkdir(__dirname + '/uploads', (err) => {
+            if (err) { console.log("Init error: " + err) }
         })
     }
 })
