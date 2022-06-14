@@ -62,8 +62,6 @@
         socket.on('progress', (msg) => {
             if (msg.progress == 1) {
                 uploadProgressBar.style.display = 'none'
-                successMsg.style.display = 'block'
-                successMsg.innerHTML = 'Filerna är uppladdade! <a href="/">Ladda upp fler</a>'
             } else {
                 uploadProgressBar.style.width = (msg.progress * 100) + '%'
                 //uploadProgressBar.innerText = Math.round(msg.progress * 100) + ' %'
@@ -75,6 +73,11 @@
         function printError(msg) {
             errorMsg.style.display = 'block'
             errorMsg.innerText = msg
+        }
+
+        function printSuccess(msg) {
+            successMsg.style.display = 'block'
+            successMsg.innerHTML = msg
         }
 
         function uploadFiles() {
@@ -91,9 +94,6 @@
 
             const formData = new FormData()
 
-
-
-
             for (i = 0; i < fileInput.files.length; i++) {
                 const name = fileInput.files[i].name
                 formData.append(name, fileInput.files[i])
@@ -108,7 +108,13 @@
                 return res.json()
             })
             .then(data => {
-                console.log(data)
+                uploadProgress.style.display = 'none'
+                
+                if (data.ok) {
+                    printSuccess('Filerna är uppladdade! <a href="/">Ladda upp fler</a>')
+                } else {
+                    printError('Något gick snett... (' + data.msg + ')')
+                }
             })
             .catch((err) => {
                 printError('Något gick snett... (' + err + ')')
